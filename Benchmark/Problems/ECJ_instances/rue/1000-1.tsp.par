@@ -1,0 +1,7 @@
+PROBLEM_FILE = ../instances/rue/1000-1.tsp
+RUNS = 1
+SEED = 1
+TIME_LIMIT = 10
+OUTPUT_TOUR_FILE = ../instances/rue/1000-1.tsp.out
+OPTIMUM = 23345321
+STOP_AT_OPTIMUM = YES
