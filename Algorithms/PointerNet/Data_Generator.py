@@ -1,3 +1,4 @@
+from json.tool import main
 import torch
 from torch.utils.data import Dataset
 import numpy as np
@@ -88,3 +89,7 @@ class TSPDataset(Dataset):
             v[points[i]] = 1
 
         return vec
+    
+    
+if __name__ == '__main__':
+    x=TSPDataset(10,5)
