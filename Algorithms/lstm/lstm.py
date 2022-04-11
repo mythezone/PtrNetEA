@@ -1,4 +1,5 @@
 import random
+from time import sleep
 
 import numpy as np
 import math
@@ -190,3 +191,11 @@ class LstmNetwork():
             h_prev = self.lstm_node_list[idx - 1].state.h
             self.lstm_node_list[idx].bottom_data_is(x, s_prev, h_prev)
 
+
+if __name__ == '__main__':
+    LP = LstmParam(5,10)
+    LS = LstmState(5,10)
+    LN = LstmNode(LP,LS)
+    LNW = LstmNetwork(LP)
+    while(True):
+        sleep(2)
