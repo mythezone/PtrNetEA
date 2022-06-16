@@ -22,15 +22,15 @@ from Data_Generator import TSPDataset
 parser = argparse.ArgumentParser(description="Pytorch implementation of Pointer-Net")
 
 # Data
-parser.add_argument('--train_size', default=1000000, type=int, help='Training data size')
-parser.add_argument('--val_size', default=10000, type=int, help='Validation data size')
-parser.add_argument('--test_size', default=10000, type=int, help='Test data size')
-parser.add_argument('--batch_size', default=256, type=int, help='Batch size')
+# parser.add_argument('--train_size', default=1000000, type=int, help='Training data size')
+# parser.add_argument('--val_size', default=10000, type=int, help='Validation data size')
+# parser.add_argument('--test_size', default=10000, type=int, help='Test data size')
+# parser.add_argument('--batch_size', default=256, type=int, help='Batch size')
 # Train
 parser.add_argument('--nof_epoch', default=50000, type=int, help='Number of epochs')
 parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
 # GPU
-parser.add_argument('--gpu', default=True, action='store_true', help='Enable gpu')
+parser.add_argument('--gpu', default=False, action='store_true', help='Enable gpu')
 # TSP
 parser.add_argument('--nof_points', type=int, default=5, help='Number of points in TSP')
 # Network
@@ -39,6 +39,12 @@ parser.add_argument('--hiddens', type=int, default=512, help='Number of hidden u
 parser.add_argument('--nof_lstms', type=int, default=2, help='Number of LSTM layers')
 parser.add_argument('--dropout', type=float, default=0., help='Dropout value')
 parser.add_argument('--bidir', default=True, action='store_true', help='Bidirectional')
+
+# for Test
+parser.add_argument('--train_size', default=2000, type=int, help='Training data size')
+parser.add_argument('--val_size', default=500, type=int, help='Validation data size')
+parser.add_argument('--test_size', default=500, type=int, help='Test data size')
+parser.add_argument('--batch_size', default=256, type=int, help='Batch size')
 
 params = parser.parse_args()
 
@@ -95,13 +101,13 @@ for epoch in range(params.nof_epoch):
 
         loss = CCE(o, target_batch)
 
-        losses.append(loss.data[0])
-        batch_loss.append(loss.data[0])
+        losses.append(loss.data)
+        batch_loss.append(loss.data)
 
         model_optim.zero_grad()
         loss.backward()
         model_optim.step()
 
-        iterator.set_postfix(loss='{}'.format(loss.data[0]))
+        iterator.set_postfix(loss='{}'.format(loss.data))
 
     iterator.set_postfix(loss=np.average(batch_loss))

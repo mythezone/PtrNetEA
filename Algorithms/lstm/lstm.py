@@ -41,7 +41,7 @@ class LstmParam:
         self.bg_diff = np.zeros(mem_cell_ct) 
         self.bi_diff = np.zeros(mem_cell_ct) 
         self.bf_diff = np.zeros(mem_cell_ct) 
-        self.bo_diff = np.zeros(mem_cell_ct) 
+        self.bo_diff = np.zeros(mem_cell_ct)  
 
     def apply_diff(self, lr = 1):
         self.wg -= lr * self.wg_diff

@@ -16,7 +16,6 @@ class Encoder(nn.Module):
                  bidir):
         """
         Initiate Encoder
-
         :param Tensor embedding_dim: Number of embbeding channels
         :param int hidden_dim: Number of hidden units for the LSTM
         :param int n_layers: Number of layers for LSTMs
@@ -42,7 +41,6 @@ class Encoder(nn.Module):
                 hidden):
         """
         Encoder - Forward-pass
-
         :param Tensor embedded_inputs: Embedded inputs of Pointer-Net
         :param Tensor hidden: Initiated hidden units for the LSTMs (h, c)
         :return: LSTMs outputs and hidden units (h, c)
@@ -57,7 +55,6 @@ class Encoder(nn.Module):
     def init_hidden(self, embedded_inputs):
         """
         Initiate hidden units
-
         :param Tensor embedded_inputs: The embedded input of Pointer-NEt
         :return: Initiated hidden units for the LSTMs (h, c)
         """
@@ -84,7 +81,6 @@ class Attention(nn.Module):
                  hidden_dim):
         """
         Initiate Attention
-
         :param int input_dim: Input's diamention
         :param int hidden_dim: Number of hidden units in the attention
         """
@@ -109,7 +105,6 @@ class Attention(nn.Module):
                 mask):
         """
         Attention - Forward-pass
-
         :param Tensor input: Hidden state h
         :param Tensor context: Attention context
         :param ByteTensor mask: Selection mask
@@ -149,7 +144,6 @@ class Decoder(nn.Module):
                  hidden_dim):
         """
         Initiate Decoder
-
         :param int embedding_dim: Number of embeddings in Pointer-Net
         :param int hidden_dim: Number of hidden units for the decoder's RNN
         """
@@ -173,7 +167,6 @@ class Decoder(nn.Module):
                 context):
         """
         Decoder - Forward-pass
-
         :param Tensor embedded_inputs: Embedded inputs of Pointer-Net
         :param Tensor decoder_input: First decoder's input
         :param Tensor hidden: First decoder's hidden states
@@ -200,7 +193,6 @@ class Decoder(nn.Module):
         def step(x, hidden):
             """
             Recurrence step function
-
             :param Tensor x: Input at time t
             :param tuple(Tensor, Tensor) hidden: Hidden states at time t-1
             :return: Hidden states at time t (h, c), Attention probabilities (Alpha)
@@ -266,7 +258,6 @@ class PointerNet(nn.Module):
                  bidir=False):
         """
         Initiate Pointer-Net
-
         :param int embedding_dim: Number of embbeding channels
         :param int hidden_dim: Encoders hidden units
         :param int lstm_layers: Number of layers for LSTMs
@@ -292,7 +283,6 @@ class PointerNet(nn.Module):
     def forward(self, inputs):
         """
         PointerNet - Forward-pass
-
         :param Tensor inputs: Input sequence
         :return: Pointers probabilities and indices
         """
@@ -309,8 +299,8 @@ class PointerNet(nn.Module):
         encoder_outputs, encoder_hidden = self.encoder(embedded_inputs,
                                                        encoder_hidden0)
         if self.bidir:
-            decoder_hidden0 = (torch.cat(encoder_hidden[0][-2:], dim=-1),
-                               torch.cat(encoder_hidden[1][-2:], dim=-1))
+            decoder_hidden0 = (torch.cat(tuple(encoder_hidden[0][-2:]), dim=-1),
+                               torch.cat(tuple(encoder_hidden[1][-2:]), dim=-1))
         else:
             decoder_hidden0 = (encoder_hidden[0][-1],
                                encoder_hidden[1][-1])

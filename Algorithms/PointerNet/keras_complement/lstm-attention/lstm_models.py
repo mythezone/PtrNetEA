@@ -15,7 +15,7 @@ def lstm(vocab, hidden_units, num_layers, max_sequence_length, is_attention, is_
 	timesteps = max_sequence_length
 	num_classes = 2
 	
-	adam = optimizers.Adam(lr=0.0005, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.01)
+	adam = optimizers.Adam(lr=0.0005, beta_1=0.9, b eta_2=0.999, epsilon=1e-08, decay=0.01)
 	
 	model = Sequential()
 	model.add(Embedding(len(vocab), 100, input_length=35))
