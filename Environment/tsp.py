@@ -47,8 +47,6 @@ class TSP(Problem):
         cities=self.normalized_cities[index]
         self.show_path_with_cities(cities)
         
-        
-    
     def calculate_with_cities(self,cities):
         res=0
         for i in range(self.size)-1:
