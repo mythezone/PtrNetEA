@@ -38,8 +38,6 @@ class TSP(Problem):
     def show_cities(self):
         self.s.plot(self.normalized_cities)
         
-        
-        
     def show_path_with_cities(self,cities):
         self.s.lines(cities)
         

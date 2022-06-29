@@ -19,7 +19,6 @@ class Problem:
         self.problem_file=problem_file
         self.info={}
         self.get_info()
-
         
     def get_info(self):
         with open(self.problem_file,'r') as f:
