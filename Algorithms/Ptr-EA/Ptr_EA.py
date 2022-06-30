@@ -110,13 +110,16 @@ class PDecoder(nn.Module):
         self.hidden_to_hidden=nn.Linear(hidden_dim,4*hidden_dim)
         self.hidden_out=nn.Linear(hidden_dim*2,hidden_dim)
         self.att=PAttention(hidden_dim,hidden_dim)
-
-        self.mask=Parameter(torch.ones(1),requires_grad=False)
-        self.runner=Parameter(torch.zeros(1),requires_grad=False)
+        
+        # self.mask=Parameter(torch.ones(1),requires_grad=False)
+        # self.runner=Parameter(torch.zeros(1),requires_grad=False)
         
     def forward(self,embedded_inputs,decoder_input,hidden,context):
         batch_size=embedded_inputs.size(0)
         input_lenght=embedded_inputs.size(1)
+        
+        self.mask=torch.ones(1)
+        self.runner=torch.zeros(1)
 
         mask=self.mask.repeat(input_lenght).unsqueeze(0).repeat(batch_size,1)
         self.att.init_inf(mask.size())
@@ -142,10 +145,10 @@ class PDecoder(nn.Module):
             out=torch.sigmoid(out)
 
             c_t=(forget*c)+(input*cell)
-            h_t=out*F.tanh(c_t)
+            h_t=out*torch.tanh(c_t)
 
             hidden_t,output=self.att(h_t,context,torch.eq(mask,0))
-            hidden_t=F.tanh(self.hidden_out(torch.cat((hidden_t,h_t),1)))
+            hidden_t=torch.tanh(self.hidden_out(torch.cat((hidden_t,h_t),1)))
 
             return hidden_t,c_t,output
 
@@ -160,7 +163,7 @@ class PDecoder(nn.Module):
             mask=mask*(1-one_hot_pointers)
 
             embedding_mask=one_hot_pointers.unsqueeze(2).expand(-1,-1,self.embedding_dim).byte()
-            decoder_input=embedded_inputs[embedding_mask.data].view(batch_size,self.embedding_dim)
+            decoder_input=embedded_inputs[embedding_mask.data.bool()].view(batch_size,self.embedding_dim)
             
             outputs.append(outs.unsqueeze(0))
             pointers.append(indices.unsqueeze(1))
@@ -219,8 +222,9 @@ class EAFrame:
     :param pop_size: The population size of the algorithm.
     
     """
-    def __init__(self,pop_size=5,embedding_dim=64,hidden_dim=64,n_layers=1,dropout=0,bidir=False):
+    def __init__(self,pop_size=10,iteration=1000,embedding_dim=64,hidden_dim=64,n_layers=1,dropout=0,bidir=False):
         self.pop_size=pop_size
+        self.iteration=iteration
         self.embedding_dim=embedding_dim
         self.hidden_dim=hidden_dim
         self.n_layers=n_layers
@@ -272,18 +276,19 @@ class EAFrame:
         p={}
         for key in p1.keys():
             if random.random()<cross_probability:
-                p[key]=(p1[key]+p2[key])/2
+                # p[key]=(p1[key]+p2[key])/2
+                p[key]=p2[key]
             else:
                 p[key]=p1[key]
         m=PtrNet(self.embedding_dim,self.hidden_dim,self.n_layers,self.dropout,self.bidir)
         m.load_state_dict(p)
         return m
     
-    def mutation(self,m,mutation_probability=0.2):
+    def mutation(self,m,mutation_probability=0.8):
         p=m.state_dict()
         for key in p.keys():
             if random.random()<mutation_probability:
-                rp=np.random.randn(*p[key].size())
+                rp=np.random.randn(*p[key].size())*20
                 p[key]+=rp
 
         m.load_state_dict(p)
@@ -295,12 +300,14 @@ class EAFrame:
             for j in range(len(inputs)):
                 input=inputs[j]
                 for i in range(len(input)):
-                    tmp=((input-input[i])**2).sum(axis=1)
+                    tmp=((input-input[i])**2).sum(axis=1)**0.5
                     distances[j][i]=tmp
                 
         results=0.
                 
         _,pointers=model(inputs)
+        # if list(pointers[0]).count(0)>1:
+        #     print("Error in model pointer...")
         for i in range(len(pointers)):
             pointer=pointers[i]
             # pointer.append(pointer[0])
@@ -309,7 +316,26 @@ class EAFrame:
                 res+=distances[i,pointer[j],pointer[j+1]]
             res+=distances[i,pointer[0],pointer[-1]]
             results+=res
-        return results
+        return results/len(inputs)
+    
+    def evaluate_solutions(self,inputs,solutions):
+        distances=torch.zeros((inputs.size(0),inputs.size(1),inputs.size(1)))
+        for j in range(len(inputs)):
+            input=inputs[j]
+            for i in range(len(input)):
+                tmp=((input-input[i])**2).sum(axis=1)**0.5
+                distances[j][i]=tmp
+        pointers=solutions
+        results=0.
+        for i in range(len(pointers)):
+            pointer=pointers[i]
+            # pointer.append(pointer[0])
+            res=0.
+            for j in range(len(pointer)-1):
+                res+=distances[i,pointer[j],pointer[j+1]]
+            res+=distances[i,pointer[0],pointer[-1]]
+            results+=res
+        return results/len(inputs)
     
     def eval_all(self,inputs,models):
         res=[]
@@ -317,7 +343,7 @@ class EAFrame:
         for j in range(len(inputs)):
             input=inputs[j]
             for i in range(len(input)):
-                tmp=((input-input[i])**2).sum(axis=1)
+                tmp=((input-input[i])**2).sum(axis=1)**0.5
                 distances[j][i]=tmp
                 
         for i in range(len(models)):
@@ -339,16 +365,32 @@ class EAFrame:
         self.pop.extend(pops)
         tmp_values=torch.Tensor(self.values)
         pop_index=tmp_values.argsort()[:self.pop_size]
-        self.pop=[self.pop[i] for i in pop_index]
-        self.values=[self.values[i] for i in pop_index]
+        dup_values=[tmp_values[pop_index[0]]]
+        tmp_index=[pop_index[0]]
+        i=1
+        while self.pop_size-len(tmp_index)<len(tmp_index)-i:
+            indv=tmp_values[pop_index[i]]
+            if indv in dup_values:
+                pass 
+            else:
+                dup_values.append(indv)
+                tmp_index.append(pop_index[i])
+            i+=1
+            
+        if len(tmp_index)<self.pop_size:
+            tmp_index.extend(pop_index[i:])
+
+        self.pop=[self.pop[i] for i in tmp_index]
+        self.values=[self.values[i] for i in tmp_index]
         
             
             
-    def run(self,inputs,iteration=100):
+    def run(self,inputs,solutions):
         self.init_pop(inputs)
-        for i in range(iteration):
+        best=self.evaluate_solutions(inputs,solutions)
+        for i in range(self.iteration):
             self.next_generation(inputs)
-            print("%d/%d : Best value is %f."%(i+1,iteration,self.values[0]))
+            print("%d/%d : Top 5 in pop  is %f|%f|%f|%f|%f<<-%f"%(i+1,self.iteration,self.values[0],self.values[1],self.values[2],self.values[3],self.values[4],best))
 
         
 
@@ -358,14 +400,15 @@ class hyperparam:
     nof_lstms=1
     dropout=0.
     bidir=False
-    nof_epoch=500
+    nof_epoch=100000
     lr=0.0001
-    train_size=20
-    val_size=10
-    test_size=20
-    batch_size=2
-    nof_points=5
-    
+    train_size=50
+    val_size=5
+    test_size=10
+    batch_size=5
+    nof_points=10
+    pop_size=5
+
     
 if __name__ == '__main__':
     params=hyperparam()
@@ -373,14 +416,24 @@ if __name__ == '__main__':
     model=PtrNet(params.embedding_size,params.hiddens,params.nof_lstms,params.dropout,params.bidir)
 
     dataset=TSPDataset(params.train_size,params.nof_points)
-
+    torch.save(dataset,'dataset.tch')
     dataloader=DataLoader(dataset,batch_size=params.batch_size,shuffle=True,num_workers=4)
-
+    
     inp=np.array(dataset.data['Points_List'])
     inp=torch.Tensor(inp)
 
-    model=EAFrame()
-    model.run(inp)
+    
+    solutions=np.array(dataset.data['Solutions'])
+
+   
+    model=EAFrame(params.pop_size,params.nof_epoch)
+    best=model.evaluate_solutions(inp,solutions)
+    print("The best solution is : %f"%best)
+    model.run(inp,solutions)
+    
+    best_model=model.pop[0]
+    torch.save(best_model.state_dict(),'best_model_state_dict.tch')
+    
     
         
 
