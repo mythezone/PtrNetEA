@@ -288,8 +288,9 @@ class EAFrame:
         p=m.state_dict()
         for key in p.keys():
             if random.random()<mutation_probability:
-                rp=np.random.randn(*p[key].size())*20
-                p[key]+=rp
+                rp=np.random.randn(*p[key].size())*2
+                mask=np.random.rand(*p[key].size())<0.5
+                p[key]+=rp*mask
 
         m.load_state_dict(p)
         return m
@@ -354,28 +355,31 @@ class EAFrame:
     def next_generation(self,inputs):
         pops=[]
         # 生成新后代
-        while len(pops)<self.pop_size:
+        while len(pops)<self.pop_size*2:
             parent_index=self.select_by_value(self.values,2)
             p1,p2=self.pop[parent_index[0]],self.pop[parent_index[1]]
             p_new=self.crossover(p1,p2)
-            if random.random()<0.5:
+            if random.random()<0.8:
                 self.mutation(p_new)
             pops.append(p_new)
+        for i in range(self.pop_size):
+            pops.append(self.gen_individual())
         self.values.extend(self.eval_all(inputs,pops))
         self.pop.extend(pops)
         tmp_values=torch.Tensor(self.values)
-        pop_index=tmp_values.argsort()[:self.pop_size]
+        pop_index=tmp_values.argsort()
         dup_values=[tmp_values[pop_index[0]]]
         tmp_index=[pop_index[0]]
+        
         i=1
         while self.pop_size-len(tmp_index)<len(tmp_index)-i:
             indv=tmp_values[pop_index[i]]
-            if indv in dup_values:
-                pass 
-            else:
+            np_values=np.array(dup_values)
+            if all(abs(np_values-indv)>0.01):
                 dup_values.append(indv)
                 tmp_index.append(pop_index[i])
             i+=1
+                    
             
         if len(tmp_index)<self.pop_size:
             tmp_index.extend(pop_index[i:])
