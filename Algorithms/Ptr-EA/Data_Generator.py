@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import itertools
 from tqdm import tqdm
+import pickle
 
 
 def tsp_opt(points):
@@ -58,7 +59,17 @@ class TSPDataset(Dataset):
         sample = {'Points':tensor, 'Solution':solution}
 
         return sample
-
+    
+    def _solve(self):
+        solutions=[]
+        points_list=self.data['Points_List']
+        solutions_iter = tqdm(points_list, unit='solve')
+        for i, points in enumerate(solutions_iter):
+            solutions_iter.set_description('Solved %i/%i' % (i+1, len(points_list)))
+            solutions.append(self.solver(points))
+        self.data['Solutions']=solutions
+        return {'Solutions':solutions}
+    
     def _generate_data(self):
         """
         :return: Set of points_list ans their One-Hot vector solutions
@@ -92,4 +103,17 @@ class TSPDataset(Dataset):
     
     
 if __name__ == '__main__':
-    x=TSPDataset(10,5)
+    # x=TSPDataset(5,10)
+    # with open('hello.pkl','wb') as f:
+    #     pickle.dump(x,f)
+    for p in [10,20,30,50,100,1000]:
+        if p<=5:
+            solve=True 
+        else:
+            solve=False 
+        x=TSPDataset(1000000,p,solve=solve)
+        with open('Datasets/TSPDataset_%d.pkl'%p,'wb') as f:
+            pickle.dump(x,f)
+        with open('Datasets/TrainData_%d.pkl'%p,'wb') as f:
+            pickle.dump(x.data,f)
+    
