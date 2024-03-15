@@ -1,0 +1,3 @@
+PROBLEM_FILE = bayg29.tsp
+OPTIMUM = 1610
+RUNS = 10

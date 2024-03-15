@@ -1,0 +1,4 @@
+PROBLEM_FILE = berlin52.tsp
+OPTIMUM = 7542
+MOVE_TYPE = 5
+RUNS = 10
