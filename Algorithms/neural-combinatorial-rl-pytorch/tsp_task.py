@@ -60,7 +60,7 @@ GOOGLE_DRIVE_IDS = {
     'tsp40_test.txt': '0B2fg8yPGn2TCcjFrYk85SGFVNlU',
     'tsp50_test.txt.zip': '0B2fg8yPGn2TCUVlCQmQtelpZTTQ',
 }
-
+# https://drive.usercontent.google.com/download?id=0B2fg8yPGn2TCTWNxX21jTDBGeXc&export=download&authuser=0
 def download_file_from_google_drive(id, destination):
     URL = "https://docs.google.com/uc?export=download"
 
