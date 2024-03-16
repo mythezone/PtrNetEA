@@ -2,7 +2,7 @@
 # http://stackoverflow.com/questions/25010369/wget-curl-large-file-from-google-drive/39225039#39225039
 # and from
 # https://github.com/devsisters/neural-combinatorial-rl-tensorflow/blob/master/data_loader.py
-import requests
+# import requests
 from tqdm import tqdm
 from torch.utils.data import Dataset
 from torch.autograd import Variable
@@ -92,6 +92,8 @@ def save_response_content(response, destination):
 
 def download_google_drive_file(data_dir, task, min_length, max_length):
     paths = {}
+    print("cant download ")
+    return 
     for mode in ['train', 'test']:
         candidates = []
         candidates.append(

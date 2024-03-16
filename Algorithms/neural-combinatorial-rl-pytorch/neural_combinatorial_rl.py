@@ -250,7 +250,7 @@ class Decoder(nn.Module):
         """
         batch_size = probs.size(0)
         # idxs is [batch_size]
-        idxs = probs.multinomial().squeeze(1)
+        idxs = probs.multinomial(num_samples=1).squeeze(1)
 
         # due to race conditions, might need to resample here
         for old_idxs in selections:
@@ -259,7 +259,7 @@ class Decoder(nn.Module):
             # then need to resample
             if old_idxs.eq(idxs).data.any():
                 print(' [!] resampling due to race condition')
-                idxs = probs.multinomial().squeeze(1)
+                idxs = probs.multinomial(num_samples=1).squeeze(1)
                 break
 
         sels = embedded_inputs[idxs.data, [i for i in range(batch_size)], :] 

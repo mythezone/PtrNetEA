@@ -53,7 +53,7 @@ parser.add_argument('--is_train', type=str2bool, default=True, help='')
 parser.add_argument('--n_epochs', default=1, help='')
 parser.add_argument('--random_seed', default=24601, help='')
 parser.add_argument('--max_grad_norm', default=2.0, help='Gradient clipping')
-parser.add_argument('--use_cuda', type=str2bool, default=True, help='')
+parser.add_argument('--use_cuda', type=str2bool, default=False, help='')
 parser.add_argument('--critic_beta', type=float, default=0.9, help='Exp mvg average decay')
 
 # Misc
@@ -139,7 +139,8 @@ else:
         int(args['beam_size']),
         reward_fn,
         args['is_train'],
-        args['use_cuda'])
+        args['use_cuda']
+        )
 
 
 save_dir = os.path.join(os.getcwd(),
@@ -255,22 +256,22 @@ for i in range(epoch, epoch + int(args['n_epochs'])):
             step += 1
             
             if not args['disable_tensorboard']:
-                log_value('avg_reward', R.mean().data[0], step)
-                log_value('actor_loss', actor_loss.data[0], step)
-                #log_value('critic_loss', critic_loss.data[0], step)
-                log_value('critic_exp_mvg_avg', critic_exp_mvg_avg.data[0], step)
-                log_value('nll', nll.mean().data[0], step)
+                log_value('avg_reward', R.mean().item(), step)
+                log_value('actor_loss', actor_loss.item(), step)
+                #log_value('critic_loss', critic_loss.item(), step)
+                log_value('critic_exp_mvg_avg', critic_exp_mvg_avg.item(), step)
+                log_value('nll', nll.mean().item(), step)
 
             if step % int(args['log_step']) == 0:
                 print('epoch: {}, train_batch_id: {}, avg_reward: {}'.format(
-                    i, batch_id, R.mean().data[0]))
+                    i, batch_id, R.mean().item()))
                 example_output = []
                 example_input = []
                 for idx, action in enumerate(actions):
                     if task[0] == 'tsp':
-                        example_output.append(actions_idxs[idx][0].data[0])
+                        example_output.append(actions_idxs[idx][0].item())
                     else:
-                        example_output.append(action[0].data[0])  # <-- ?? 
+                        example_output.append(action[0].item())  # <-- ?? 
                     example_input.append(sample_batch[0, :, idx][0])
                 #print('Example train input: {}'.format(example_input))
                 print('Example train output: {}'.format(example_output))
@@ -296,25 +297,25 @@ for i in range(epoch, epoch + int(args['n_epochs'])):
 
         R, probs, actions, action_idxs = model(bat)
         
-        avg_reward.append(R[0].data[0])
+        avg_reward.append(R[0].item())
         val_step += 1.
 
         if not args['disable_tensorboard']:
-            log_value('val_avg_reward', R[0].data[0], int(val_step))
+            log_value('val_avg_reward', R[0].item(), int(val_step))
 
         if val_step % int(args['log_step']) == 0:
             example_output = []
             example_input = []
             for idx, action in enumerate(actions):
                 if task[0] == 'tsp':
-                    example_output.append(action_idxs[idx][0].data[0])
+                    example_output.append(action_idxs[idx][0].item())
                 else:
-                    example_output.append(action[0].data[0])
-                example_input.append(bat[0, :, idx].data[0])
+                    example_output.append(action[0].item())
+                example_input.append(bat[0, :, idx].item())
             print('Step: {}'.format(batch_id))
             #print('Example test input: {}'.format(example_input))
             print('Example test output: {}'.format(example_output))
-            print('Example test reward: {}'.format(R[0].data[0]))
+            print('Example test reward: {}'.format(R[0].item()))
     
         
             if args['plot_attention']:
