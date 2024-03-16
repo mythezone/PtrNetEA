@@ -26,7 +26,7 @@ def str2bool(v):
 parser = argparse.ArgumentParser(description="Neural Combinatorial Optimization with RL")
 
 # Data
-parser.add_argument('--task', default='sort_10', help="The task to solve, in the form {COP}_{size}, e.g., tsp_20")
+parser.add_argument('--task', default='tsp_10', help="The task to solve, in the form {COP}_{size}, e.g., tsp_20")
 parser.add_argument('--batch_size', default=128, help='')
 parser.add_argument('--train_size', default=1000000, help='')
 parser.add_argument('--val_size', default=10000, help='')
